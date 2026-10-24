@@ -7,17 +7,25 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="description" content="爬上魔豆、躲過媽媽和巨人，搶走金蛋！">
 <title>傑克與魔豆</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&display=swap" rel="stylesheet">
 <style>
 :root{--grain:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .35 0 0 0 0 .22 0 0 0 0 .1 0 0 0 .16 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
   --corr:repeating-linear-gradient(180deg,rgba(110,70,30,.10) 0 2px,rgba(0,0,0,0) 2px 7px);
   --ink:#3d2b1f;--kraft:#d2ad74;--kraftD:#8f6a3c;--paper:#f7f1e3;--red:#d64f45;--teal:#2f9c95;--mustard:#f0c443}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%;background:#4a3524;overflow:hidden;overscroll-behavior:none;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;color:var(--ink)}
+html,body{margin:0;height:100%;background:#4a3524;overflow:hidden;overscroll-behavior:none;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;font-family:"Huninn","PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;color:var(--ink)}
 #wrap{position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;overflow:hidden;background:#f2d65e;box-shadow:0 0 50px rgba(0,0,0,.5)}
 canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
 #hud{position:absolute;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top) + 10px) 12px 0 34px;display:flex;align-items:center;gap:8px;pointer-events:none}
 .chip{background:var(--grain),var(--paper);border-radius:6px;padding:7px 14px;font-weight:900;font-size:18px;color:var(--ink);border:0;box-shadow:0 3px 0 #c9bba0,0 6px 12px rgba(40,25,10,.25);position:relative}
-#timer{font-variant-numeric:tabular-nums;min-width:92px;text-align:center;transform:rotate(-1.5deg)}
+#timer{font-variant-numeric:tabular-nums;min-width:118px;text-align:center;transform:rotate(-1.5deg);font-size:22px;padding:6px 14px 6px 10px;display:flex;align-items:center;gap:6px}
+#timer b{font-size:26px;color:var(--red);min-width:52px;text-align:right}
+#timer .sw{width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid var(--ink);position:relative;flex:none;margin-top:3px}
+#timer .sw:before{content:"";position:absolute;left:50%;top:-8px;width:6px;height:5px;transform:translateX(-50%);background:var(--ink);border-radius:2px}
+#timer .sw:after{content:"";position:absolute;left:50%;top:2px;width:2px;height:7px;background:var(--red);transform-origin:50% 100%;transform:translateX(-50%) rotate(var(--a,0deg))}
+#bestc{font-size:13px;display:none;background:var(--grain),#e9f4f3;transform:rotate(2deg)}
 #timer:after{content:"";position:absolute;left:50%;top:-8px;width:38px;height:14px;transform:translateX(-50%) rotate(4deg);background:repeating-linear-gradient(45deg,rgba(255,255,255,.45) 0 4px,rgba(0,0,0,0) 4px 8px),var(--teal);opacity:.9}
 #coins{color:#7a5410;font-size:15px;display:none;background:var(--grain),var(--mustard);box-shadow:0 3px 0 #b8862a,0 6px 12px rgba(40,25,10,.25);transform:rotate(1.5deg)}
 #mute{margin-left:auto;pointer-events:auto;font-size:20px;cursor:pointer;font-family:inherit;line-height:1}
@@ -69,8 +77,9 @@ h2{margin:0 0 6px;font-size:26px;color:var(--ink)}
 <div id="wrap">
   <canvas id="c"></canvas>
   <div id="hud">
-    <div class="chip" id="timer">0.0 秒</div>
+    <div class="chip" id="timer"><span class="sw"></span><b id="tval">0.0</b> 秒</div>
     <div class="chip" id="coins">金幣 0</div>
+    <div class="chip" id="bestc"></div>
     <button class="chip" id="mute" aria-label="靜音">🔊</button>
   </div>
   <div id="hint"></div>
@@ -133,7 +142,7 @@ const $ = id => document.getElementById(id);
 const wrap = $('wrap'), cv = $('c');
 const mainCtx = cv.getContext('2d');
 let ctx = mainCtx;
-const FONT = '"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif';
+const FONT = '"Huninn","PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif';
 const TOP = 90;          // 魔豆高度（公尺）
 const SW = 0.22;         // 換藤時間
 const STX = [.22, .5, .78]; // 三根藤的位置
@@ -617,6 +626,21 @@ function paintGiantFingers(w, h) {
   tape(w * .5, fh * 1.1 * 1.5, w * .14, fh * .9, 1.5, '#f3d9b8', 'dots');
 }
 let DECO = [], FOG = [], STARS = [];
+// 草地上走來走去的綿羊
+const FLOCK = [{ x: .58, y: 34, dir: -1, v: .035, wait: 0, s: 1.05 }, { x: .2, y: 58, dir: 1, v: .028, wait: 1.5, s: 1.2 }, { x: .82, y: 82, dir: -1, v: .04, wait: 0, s: 1.35 }];
+function updFlock(dt) {
+  for (const f of FLOCK) {
+    if (f.wait > 0) { f.wait -= dt; continue; }
+    f.x += f.dir * f.v * dt;
+    if (f.x < .06 || f.x > .94) { f.dir *= -1; f.x = clamp(f.x, .06, .94); }
+    if (Math.random() < dt * .25) f.wait = rnd(1, 2.5);
+    if (Math.random() < dt * .08) f.dir *= -1;
+  }
+}
+function drawFlock() {
+  const gy = sy(0); if (gy > H + 20 || gy < -150) return;
+  for (const f of FLOCK) drawSheep(f.x * W, gy + f.y * U, f.dir, T + f.x * 9, false, f.wait > 0 ? (Math.sin(T * 3 + f.y) > 0 ? 1 : .7) : 0, f.s);
+}
 function initStatic() {
   DECO = []; for (let i = 0; i < 34; i++) DECO.push({ h: rnd(5, TOP - 2), x: Math.random(), f: rnd(.35, .7), s: rnd(.45, 1.05), a: 1 });
   STARS = []; for (let i = 0; i < 30; i++) STARS.push({ x: Math.random(), h: rnd(28, 110), s: rnd(.6, 1.3), dot: Math.random() < .45, c: pick(['#f6d36b', '#fff3d0', '#f2a03a', '#ffffff']) });
@@ -1095,7 +1119,7 @@ function updEvent(dt) {
 
 // ---------- 更新 ----------
 function update(dt) {
-  sceneT += dt; T += dt;
+  sceneT += dt; T += dt; updFlock(dt);
   if (shakeT > 0) shakeT -= dt;
   for (const f of G.floats) f.t += dt;
   G.floats = G.floats.filter(f => f.t < 1);
@@ -1244,6 +1268,7 @@ function drawWorld() {
   if (G.ev && G.ev.type === 'balloon') drawBalloon(G.ev.x, sy(G.vh) + 10 * U, T, false);
   drawMomInWorld();
   drawJackInWorld();
+  drawFlock();
   if (G.ev) {
     const t = G.ev.type;
     if (t === 'bird') drawBirdEvent(); else if (t === 'witch') drawWitchEvent();
@@ -1452,15 +1477,16 @@ function drawBalloon(x, by, t, withJack) {
   limb(x - 13 * k, by - 2 * k, x + 13 * k, by - 2 * k, '#b98a62', 1.5 * k, false); limb(x - 13 * k, by + 4 * k, x + 13 * k, by + 4 * k, '#b98a62', 1.5 * k, false);
   rr(x - 17 * k, by - 12 * k, 34 * k, 5 * k, 2 * k, '#b98a62', false);
 }
-function drawSheep(x, y, dir, t) {
-  const k = U * 1.4; ctx.drawImage(IMG.cloud, x - 36 * k, y + 2 * k, 72 * k, 39 * k);
-  ctx.save(); ctx.translate(x, y - Math.abs(Math.sin(t * 10)) * 3 * k); ctx.scale(dir * k, k);
+function drawSheep(x, y, dir, t, onCloud = true, graze = 0, sc = 1.4) {
+  const k = U * sc; if (onCloud) ctx.drawImage(IMG.cloud, x - 36 * k, y + 2 * k, 72 * k, 39 * k);
+  ctx.save(); ctx.translate(x, y - (graze ? 0 : Math.abs(Math.sin(t * 10)) * 3 * k)); ctx.scale(dir * k, k);
   rr(-10, 6, 4, 9, 2, '#7a6a7a', false); rr(6, 6, 4, 9, 2, '#7a6a7a', false);
   [[-10, -2, 9], [0, -6, 10], [10, -2, 9], [-4, 4, 9], [6, 4, 8]].forEach(c => circ(c[0], c[1], c[2], '#fffaf5'));
-  ell(16, -4, 7, 8, '#8a7a8a'); ell(11, -9, 4.5, 2.2, '#8a7a8a', -.5, false);
-  circ(15, -11, 4.5, '#fffaf5', false);
-  circ(18, -5, 1.8, '#fff', false); circ(18.5, -5, 1, '#2a1a20', false);
-  circ(19, -1, 1.8, 'rgba(255,150,180,.7)', false);
+  const hy = graze * 9;
+  ell(16, -4 + hy, 7, 8, '#8a7a8a'); ell(11, -9 + hy, 4.5, 2.2, '#8a7a8a', -.5, false);
+  circ(15, -11 + hy, 4.5, '#fffaf5', false);
+  circ(18, -5 + hy, 1.8, '#fff', false); circ(18.5, -5 + hy, 1, '#2a1a20', false);
+  circ(19, -1 + hy, 1.8, 'rgba(255,150,180,.7)', false);
   ctx.restore();
 }
 function drawSheepEvent() {
@@ -1658,12 +1684,14 @@ function render() {
   ctx.drawImage(IMG.vig, 0, 0, W, H);
   if (fadeA > 0) { ctx.fillStyle = `rgba(255,250,240,${fadeA})`; ctx.fillRect(0, 0, W, H); }
 }
-let lastTimer = '', lastCoins = -1;
+let lastTimer = '', lastCoins = -1, lastBest = null;
 function hud() {
   const show = ['climb', 'toGiant', 'giant', 'fail', 'win', 'mom'].includes(scene);
-  const t = show ? fmt(G.time) + ' 秒' : '';
+  const t = show ? fmt(G.time) : '';
   $('timer').style.visibility = show ? 'visible' : 'hidden';
-  if (t !== lastTimer) { $('timer').textContent = t; lastTimer = t; }
+  if (t !== lastTimer) { $('tval').textContent = t; lastTimer = t; $('timer').style.setProperty('--a', (G.time % 1) * 360 + 'deg'); }
+  const b = bestTime(), bs = show && b ? '最佳 ' + fmt(b) : '';
+  if (bs !== lastBest) { lastBest = bs; $('bestc').textContent = bs; $('bestc').style.display = bs ? 'block' : 'none'; }
   if (G.bonus !== lastCoins) { lastCoins = G.bonus; $('coins').style.display = G.bonus ? 'block' : 'none'; $('coins').textContent = `金幣 −${G.bonus} 秒`; }
 }
 
@@ -1769,7 +1797,9 @@ const shareGame = async () => {
 $('bGame').onclick = shareGame; $('bGame2').onclick = shareGame;
 
 window.addEventListener('resize', resize);
-initPats(); initStatic(); resize(); setMute(); updateTitleBest();
+initPats(); initStatic(); resize();
+// 粉圓體載入後重畫一次預先畫好的圖（招牌、標籤上的字）
+try { document.fonts.load('20px Huninn', document.documentElement.textContent).then(() => resize()).catch(() => {}); } catch (e) {} setMute(); updateTitleBest();
 requestAnimationFrame(frame);
 window.__game = { get G() { return G; }, get scene() { return scene; }, set scene(v) { scene = v; }, PAT, IMG };
 })();

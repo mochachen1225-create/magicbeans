@@ -42,6 +42,7 @@
 
 - 單一 `index.html`，沒有外部圖片、函式庫、伺服器或 AI：畫面用 Canvas 2D 即時繪製（瓦楞紙手作風：紙板、紙膠帶、圖釘、毛氈），音效用 Web Audio 合成，震動用 Vibration API。
 - 操作用 Pointer Events，手指和滑鼠都適用。
+- 字型用 [jf open 粉圓（Huninn）](https://fonts.google.com/specimen/Huninn)，從 Google Fonts 載入；沒有網路時自動改用手機內建字型。
 - 部署：GitHub Pages（Settings → Pages → Deploy from a branch）。
 
 ## 本機執行
