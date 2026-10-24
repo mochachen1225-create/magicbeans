@@ -70,6 +70,7 @@ h2{margin:0 0 6px;font-size:26px;color:var(--ink)}
 #toast.on{opacity:1}
 #shareImg{display:block;max-width:100%;max-height:42vh;margin:4px auto 6px;border-radius:6px;box-shadow:0 4px 0 #8f6a3c,0 10px 18px rgba(40,25,10,.35);transform:rotate(-1deg);-webkit-touch-callout:default;-webkit-user-select:auto;user-select:auto}
 #pShare .btn{margin-top:9px;padding:12px}
+.ver{font-size:11px;opacity:.55;margin-top:6px}
 .linkbtn{border:0;background:none;font-family:inherit;font-size:16px;font-weight:800;color:var(--ink);margin-top:10px;cursor:pointer;text-decoration:underline}
 </style>
 </head>
@@ -100,6 +101,8 @@ h2{margin:0 0 6px;font-size:26px;color:var(--ink)}
     <div class="best" id="tBest"></div>
     <button class="btn green" id="bStart">開始</button>
     <button class="btn ghost" id="bGame2">分享遊戲給朋友</button>
+    <button class="linkbtn" id="bVoice">🔊 試聽配音</button>
+    <div class="ver">版本 1.4・日文配音</div>
   </div></div>
 
   <div class="panel" id="pFail"><div class="card">
@@ -1836,6 +1839,7 @@ const shareGame = async () => {
   copyText(msg + ' ' + url);
 };
 $('bGame').onclick = shareGame; $('bGame2').onclick = shareGame;
+$('bVoice').onclick = () => { audio(); if (muted) { toast('先點右上角喇叭打開聲音'); return; } if (!TTS) { toast('這個瀏覽器不支援配音'); return; } say('傑克！我們家的牛呢！', VO.mom); setTimeout(() => say(JA_CHANT, VO.giant, false), 2200); };
 
 window.addEventListener('resize', resize);
 initPats(); initStatic(); resize();
