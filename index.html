@@ -828,7 +828,7 @@ function genCoins() {
 function newRun() {
   return {
     h: 0, vh: 0, stalk: 1, from: 1, switchT: 0, swDur: SW, heat: 0, stun: 0, lastSide: -1, arm: 0,
-    momH: -3.5, momXs: W / 2, momDelay: 0, momTalk: 3, momLine: '', momLineT: 0,
+    momH: -3.5, momStalk: 1, momTo: 1, momHop: 0, momWait: 0, momDelay: 0, momTalk: 3, momLine: '', momLineT: 0,
     time: 0, bonus: 0, events: genEvents(), coins: genCoins(), breaks: [], floats: [], ev: null, windBlow: false,
     seen: {}, streaks: [], inGiant: false, gi: null, final: 0, failReason: '', quick: false, bubble: '',
     obs: [], ride: null, sameCount: 0, hits: 0, slips: 0, rode: false, minGap: 99, giantT: 0, momBag: [], momVis: false, bumpT: 0, stungT: 0
@@ -1181,7 +1181,15 @@ function updClimb(dt) {
   camH += (Math.max(4, G.vh) - camH) * Math.min(1, dt * 8);
   if (G.momDelay > 0) G.momDelay -= dt;
   else if (!G.windBlow) G.momH += (2 + Math.min(.7, Math.max(0, G.h) * .008)) * dt;
-  G.momXs += (stalkX(G.stalk, Math.max(0, G.momH)) - G.momXs) * Math.min(1, dt * 3);
+  // 媽媽也只能抓在藤上：跟著傑克換藤，但慢半拍、用跳的；遇到斷掉的地方先跳到別根
+  const gapAt = (st, h) => G.breaks.some(b => b.stalk === st && h > b.h - .5 && h < b.h + 2);
+  let want = G.stalk;
+  if (gapAt(want, G.momH)) want = [1, 0, 2].find(q => !gapAt(q, G.momH)) ?? G.momStalk;
+  if (G.momHop > 0) { G.momHop -= dt; if (G.momHop <= 0) G.momStalk = G.momTo; }
+  else if (want !== G.momStalk && G.momH > 0) {
+    G.momWait += dt;
+    if (G.momWait > .7 || gapAt(G.momStalk, G.momH + .6)) { G.momWait = 0; G.momTo = want; G.momHop = .3; }
+  } else { G.momWait = 0; if (G.momH <= 0) G.momStalk = G.momTo = want; }
   const my = G.momH < 0 ? sy(0) - 26 * U : sy(G.momH) + 4 * U;
   G.momVis = my < H - 40 * U && my > 70 * U;
   if (G.momVis) { if ((G.momTalk -= dt) <= 0) { G.momTalk = rnd(2.2, 3.4); G.momLine = momSay(); G.momLineT = 1.7; } }
@@ -1355,8 +1363,12 @@ function drawMomInWorld() {
     if (G.bubble) bubble(x + 20 * U, gy - 48 * U, G.bubble);
   } else if (['climb', 'fail', 'toGiant'].includes(scene) && !G.inGiant) {
     let x, y, mode;
-    if (G.momH < 0) { x = lerp(W * .42, W / 2, clamp((G.momH + 3.5) / 3.5, 0, 1)); y = gy; mode = 'run'; G.momXs = x; }
-    else { x = G.momXs; y = sy(G.momH) + 4 * U; mode = 'climb'; }
+    if (G.momH < 0) { x = lerp(W * .46, W / 2, clamp((G.momH + 3.5) / 3.5, 0, 1)); y = gy; mode = 'run'; }
+    else {
+      const h = G.momH; y = sy(h) + 4 * U; mode = 'climb';
+      if (G.momHop > 0) { const u = ease(1 - G.momHop / .3); x = lerp(stalkX(G.momStalk, h), stalkX(G.momTo, h), u); y -= Math.sin(u * Math.PI) * 12 * U; }
+      else x = stalkX(G.momStalk, h);
+    }
     if (y > H + 60) return;
     drawMom(x, y, 1.1, T, mode);
     if (G.momLineT > 0 && scene === 'climb' && G.momVis) bubble(clamp(x, 80, W - 80), y - 46 * U, G.momLine, 15);
