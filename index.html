@@ -85,7 +85,7 @@ h2{margin:0 0 6px;font-size:26px;color:var(--ink)}
       ③ <b>點別根藤</b>就跳過去：閃開小鳥、巫婆、綿羊、豌豆，繞過斷藤、毛毛蟲、蜂窩<br>
       ④ 熱氣球飄過來時<b>跳向它</b>就能搭上！<br>
       ⑤ 大風來時<b>按住不要動</b><br>
-      ⑥ 巨人背對時<b>按住前進</b>，轉頭就<b>放開</b>！<br>
+      ⑥ 巨人摀住眼睛時<b>按住前進</b>，手放下就<b>放開</b>！<br>
       <span class="pc">電腦也能玩：用滑鼠點擊、按住</span>
     </div>
     <div class="best" id="tBest"></div>
@@ -546,16 +546,29 @@ function paintGiantHead(w, h) {
   [-1, 1].forEach(sd => { circ(cx + sd * rx * .78, cy + ry * .3, w * .016, '#e0b33c'); circ(cx + sd * rx * .78 - 2, cy + ry * .3 - 2, w * .005, '#fff4c0', false); });
   tape(cx + rx * .35, cy - ry * .72, w * .16, w * .045, .25, '#3b9c97');
 }
-function paintGiantHand(w, h) {
-  const fingers = [[.17, .14], [.34, .06], [.51, .08], [.68, .18]];
-  const sub = (x, y, ww, hh, r) => { ctx.moveTo(x + r, y); ctx.arcTo(x + ww, y, x + ww, y + hh, r); ctx.arcTo(x + ww, y + hh, x, y + hh, r); ctx.arcTo(x, y + hh, x, y, r); ctx.arcTo(x, y, x + ww, y, r); ctx.closePath(); };
-  card(() => { ctx.save(); ctx.translate(w * .2, h * .64); ctx.rotate(-.9); rrPath(-w * .07, -h * .3, w * .15, h * .32, w * .075); ctx.restore(); }, PAT.skin, '#9c6a44', 4);
-  card(() => { ctx.beginPath(); fingers.forEach(([fx, fy]) => sub(w * fx, h * fy, w * .15, h * .48, w * .075)); sub(w * .16, h * .4, w * .66, h * .44, w * .2); }, PAT.skin, '#9c6a44', 5);
-  sh(false); ctx.strokeStyle = 'rgba(120,60,30,.35)'; ctx.lineWidth = 2 * U; ctx.lineCap = 'round';
-  fingers.forEach(([fx, fy]) => { const x = w * (fx + .075); ctx.beginPath(); ctx.moveTo(x - w * .03, h * (fy + .17)); ctx.lineTo(x + w * .03, h * (fy + .17)); ctx.stroke(); });
-  card(() => rrPath(w * .12, h * .82, w * .74, h * .18, 6), PAT.purple, '#3e2a5a', 4);
-  circ(w * .5, h * .74, w * .03, '#e0b33c');
-  tape(w * .42, h * .22, w * .2, w * .07, -.4, '#f3d9b8', 'dots');
+// 巨人的大手指（手掌在畫面外，只看到手指和髒指甲）；手指朝 +x
+function paintGiantFingers(w, h) {
+  const fh = h / 4.3, lens = [.78, .97, .92, .74];
+  card(() => rrPath(-w * .2, 0, w * .38, h, h * .2), PAT.skin, '#9c6a44', 5);
+  lens.forEach((lf, i) => {
+    const y = i * fh * 1.1, len = w * lf;
+    card(() => rrPath(0, y, len, fh, fh / 2), PAT.skin, '#9c6a44', 5);
+    sh(false); ctx.strokeStyle = 'rgba(120,60,30,.4)'; ctx.lineWidth = 2 * U; ctx.lineCap = 'round';
+    [.42, .68].forEach(k => { ctx.beginPath(); ctx.arc(len * k, y + fh / 2, fh * .3, -1.1, 1.1); ctx.stroke(); });
+    ctx.strokeStyle = 'rgba(60,35,15,.5)'; ctx.lineWidth = 1.2 * U;
+    for (let j = 0; j < 4; j++) { const hx = len * .42 + j * 4 * U; ctx.beginPath(); ctx.moveTo(hx, y + 3 * U); ctx.lineTo(hx + 3 * U, y - 2 * U); ctx.stroke(); }
+    // 長長的髒指甲：指甲尖端卡著一整條黑泥
+    const nx = len - fh * .75, ny = y + fh * .12, nw = fh * 1.0, nh = fh * .76;
+    const nail = () => { ctx.beginPath(); ctx.moveTo(nx, ny); ctx.lineTo(nx + nw * .7, ny); ctx.quadraticCurveTo(nx + nw * 1.05, ny + nh / 2, nx + nw * .7, ny + nh); ctx.lineTo(nx, ny + nh); ctx.closePath(); };
+    card(nail, '#e8dbb4', '#9a8456', 2);
+    sh(false); ctx.save(); nail(); ctx.clip();
+    ctx.fillStyle = '#35230f'; ctx.fillRect(nx + nw * .6, ny - 2, nw, nh + 4);
+    ctx.fillStyle = 'rgba(80,55,25,.35)'; ctx.fillRect(nx + nw * .45, ny - 2, nw * .15, nh + 4);
+    ctx.restore();
+    ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 1.5 * U; ctx.beginPath(); ctx.moveTo(nx + nw * .1, ny + nh * .25); ctx.lineTo(nx + nw * .4, ny + nh * .25); ctx.stroke();
+    ell(len * .55, y + fh * .7, fh * .2, fh * .1, 'rgba(110,80,40,.25)', 0, false);
+  });
+  tape(w * .5, fh * 1.1 * 1.5, w * .14, fh * .9, 1.5, '#f3d9b8', 'dots');
 }
 let DECO = [], FOG = [], STARS = [];
 function initStatic() {
@@ -586,7 +599,7 @@ function resize() {
   IMG.vig = make(W, H, (w, h) => { paintVignette(w, h); ctx.fillStyle = IMG.grain; ctx.fillRect(0, 0, w, h); });
   IMG.star = make(26 * U, 26 * U, (w, h) => { sh(); star(w / 2, h / 2 - 2 * U, 9 * U, '#f6d36b'); });
   IMG.ghead = make(W, H * .4, paintGiantHead);
-  IMG.ghand = make(W * .36, W * .4, paintGiantHand);
+  IMG.ghand = make(W * .6, W * .52, paintGiantFingers);
   buildStalks();
 }
 
@@ -1459,9 +1472,25 @@ function drawClimbUI() {
   }
   for (const f of G.floats) { ctx.globalAlpha = 1 - f.t; text(f.s, f.x, f.y - f.t * 40 * U, 20 * U, f.c); ctx.globalAlpha = 1; }
 }
-function drawGiantHand(x, y, rot, mirror) {
+function drawGiantHand(x, y, rot) {
   const hw = IMG.ghand.w, hh = IMG.ghand.h;
-  ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(mirror, 1); ctx.drawImage(IMG.ghand, -hw / 2, -hh / 2, hw, hh); ctx.restore();
+  ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.drawImage(IMG.ghand, -hw * .2, -hh / 2, hw * 1.2, hh); ctx.restore();
+}
+// 尖牙＋蛀牙的大嘴巴
+function drawGiantMouth(x, y, open) {
+  const mw = W * .2, mh = W * .018 + open * W * .07, ih = mh + W * .012;
+  ell(x, y, mw + W * .015, mh + W * .03, '#7e2a22');
+  ell(x, y, mw, ih, '#3a0f0c', 0, false);
+  if (open > .25) ell(x, y + ih * .55, mw * .45, ih * .4, '#c9534a', 0, false);
+  const edge = (tx, sgn) => y + sgn * ih * Math.sqrt(Math.max(0, 1 - Math.pow((tx - x) / mw, 2))) * .96;
+  const tooth = (tx, sgn, i, n) => {
+    const tw = mw / n * .95, th = W * .038 * (1 - Math.abs(i / (n - 1) - .5) * .5), ty = edge(tx, sgn);
+    const col = i === 1 ? '#d8c690' : '#f6f0dc';
+    poly([[tx - tw, ty - sgn * 2], [tx + tw, ty - sgn * 2], [tx, ty + sgn * -th * -1]], col);
+    if ((sgn < 0 && (i === 2 || i === 5)) || (sgn > 0 && i === 3)) { circ(tx, ty + sgn * th * .35, tw * .32, '#3a2412', false); circ(tx + tw * .25, ty + sgn * th * .2, tw * .15, '#5a3a1e', false); }
+  };
+  for (let i = 0, n = 8; i < n; i++) if (i !== 4) tooth(x - mw * .82 + i * mw * 1.64 / (n - 1), -1, i, n);
+  for (let i = 0, n = 6; i < n; i++) tooth(x - mw * .7 + i * mw * 1.4 / (n - 1), 1, i, n);
 }
 function drawGiantScene() {
   const g = G.gi;
@@ -1481,7 +1510,13 @@ function drawGiantScene() {
     circ(ex + dx / d * er * .45 + wob, eyeY + dy / d * er * .45, er * .5, '#1e1510', false);
     circ(ex + dx / d * er * .45 - er * .15 + wob, eyeY + dy / d * er * .45 - er * .15, er * .14, '#fff', false);
   });
-  const cw = W * .78, ch = IMG.castle.h * .78; ctx.drawImage(IMG.castle, (W - cw) / 2, H * .55 - ch, cw, ch);
+  let open = .15;
+  if (g.state === 'back') open = .3 + .35 * Math.abs(Math.sin(T * 9));
+  else if (g.state === 'turning') open = .2;
+  if (scene === 'fail') open = clamp(sceneT * 3, .2, 1);
+  if (scene === 'win') open = .55;
+  drawGiantMouth(W / 2, H * .245 + bob, open);
+  const cw = W * .62, ch = IMG.castle.h * .62; ctx.drawImage(IMG.castle, (W - cw) / 2, H * .55 - ch, cw, ch);
   if (!(scene === 'win')) drawEgg(W / 2, H * .515, 1, T);
   ctx.drawImage(IMG.bank, 0, H * .47, W, IMG.bank.h);
   if (scene === 'win') {
@@ -1496,12 +1531,14 @@ function drawGiantScene() {
   else if (g.state === 'turnback') cover = ease(clamp(g.t / .35, 0, 1));
   if (scene === 'fail') cover = 0;
   const grab = scene === 'fail' ? ease(clamp(sceneT / .5, 0, 1)) : 0;
+  const L = IMG.ghand.w * .9;
   [-1, 1].forEach(sd => {
-    const cxp = W / 2 + sd * W * GI.eyeDX, cyp = eyeY + H * .025;
-    const rxp = W * (.5 + sd * .36), ryp = H * .34 + Math.sin(T * 2 + sd) * 2 * U;
-    let x = lerp(rxp, cxp, cover), y = lerp(ryp, cyp, cover), r = lerp(sd * .35, -sd * .12, cover);
-    if (grab) { x = lerp(x, jx + sd * 24 * U, grab); y = lerp(y, jy - 30 * U, grab); r = lerp(r, sd * .5, grab); }
-    drawGiantHand(x, y, r, sd < 0 ? -1 : 1);
+    // 平常：從左右兩邊伸進來抓著城堡；唸口訣：從上面伸下來摀住眼睛
+    const rx0 = sd < 0 ? -W * .25 : W * 1.25, ry0 = H * .28 + Math.sin(T * 2 + sd) * 3 * U, rr0 = sd < 0 ? .38 : Math.PI - .38;
+    const cx1 = W / 2 + sd * W * GI.eyeDX, cy1 = eyeY + W * .06 - L, rr1 = Math.PI / 2 + sd * .06;
+    let x = lerp(rx0, cx1, cover), y = lerp(ry0, cy1, cover), r = lerp(rr0, rr1, cover);
+    if (grab) { x = lerp(x, jx + sd * IMG.ghand.h * .32, grab); y = lerp(y, jy - L - 6 * U, grab); r = lerp(r, Math.PI / 2, grab); }
+    drawGiantHand(x, y, r);
   });
   if (g.state === 'turning' && g.t > .1) bubble(W * .78, H * .2, '嗯？', 20);
   if (scene === 'fail') bubble(W * .74, H * .2, '嘿嘿嘿！抓到了！', 18);
