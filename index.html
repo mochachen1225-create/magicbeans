@@ -177,16 +177,19 @@ function audio() {
 const TTS = 'speechSynthesis' in window;
 let VOICE = null, voiceUnlocked = false;
 function pickVoice() {
-  try { const vs = speechSynthesis.getVoices(); VOICE = vs.find(v => /zh[-_]TW/i.test(v.lang)) || vs.find(v => /zh[-_](HK|Hant)/i.test(v.lang)) || vs.find(v => /^zh/i.test(v.lang)) || null; } catch (e) {}
+  try { const vs = speechSynthesis.getVoices(); VOICE = vs.find(v => /^ja/i.test(v.lang)) || null; } catch (e) {}
 }
 if (TTS) { pickVoice(); try { speechSynthesis.onvoiceschanged = pickVoice; } catch (e) {} }
+// 配音用日文：畫面維持中文，聲音念對應的日文台詞
+const JA = {"傑克！給我下來！": "ジャック！降りてきなさい！", "我們家的牛呢！": "うちの牛はどこよ！", "豆子能吃嗎？！": "豆なんか食べられるの！？", "晚餐不用吃了！": "晩ごはん抜きよ！", "你給我站住！": "待ちなさい！", "一頭牛換五顆豆子？！": "牛一頭と豆五つ！？", "那頭牛叫牛牛欸！": "あの子はニウニウなのよ！", "爬那麼高不怕摔喔！": "そんな高い所、落ちるわよ！", "功課寫完了沒？！": "宿題は終わったの！？", "明天開始換你當牛！": "明日からあんたが牛よ！", "我數到三！一、二……": "三つ数えるわよ！いち、に…", "回家罰你洗一個月的碗！": "一ヶ月、皿洗いの刑よ！", "魔豆是能繳房租嗎？！": "豆で家賃が払えるの！？", "鄰居都在看了啦！": "ご近所さんが見てるわよ！", "我要跟你阿嬤告狀！": "おばあちゃんに言いつけるわよ！", "外套都沒穿會著涼！": "上着も着ないで、風邪ひくわよ！", "你給我說清楚！": "ちゃんと説明しなさい！", "早知道生一顆豆子就好！": "豆を産んだ方がマシだったわ！", "牛牛的家都空了啦！": "ニウニウの小屋が空っぽよ！", "掃把已經熱身好了！": "ほうきの準備はできてるわよ！", "傑克！我們家的牛呢！": "ジャック！うちの牛はどこ！", "今天晚餐沒你的份。": "今日の晩ごはんは抜きね。", "拿牛換豆子？你給我下來！": "牛と豆を交換！？降りてきなさい！", "掃把比魔豆還快喔。": "ほうきは豆の木より速いのよ。", "豆子上的蟲是鳥的，你不是。": "豆の虫は鳥のもの。君は違う。", "啾！你的頭髮看起來很像鳥窩。": "チュン！君の髪、鳥の巣みたい。", "小鳥也是要吃早餐的。": "小鳥だって朝ごはんが必要なの。", "被啄一下，手就鬆了……": "つつかれて、手が離れちゃった…", "抓緊一點啊！": "しっかりつかまって！", "傑克乘著風，飛去隔壁村了。": "ジャックは風に乗って、隣の村まで飛んでいった。", "今天風很大，傑克很輕。": "今日は風が強い。ジャックは軽い。", "風說：叫你不要亂動。": "動くなって言ったでしょ、と風が言った。", "嘿嘿嘿，我聞到人類的味道！": "ふっふっふ、人間のにおいがするぞ！", "木頭人不能動，你動了。": "だるまさんは動いちゃダメ。動いたな。", "巨人今天的點心有著落了。": "今日のおやつが決まったぞ。", "費、菲、佛、凡！抓到你了！": "フィー・ファイ・フォー・ファム！捕まえたぞ！", "巫婆：借過借過～掃把沒有煞車！": "どいてどいて〜、ほうきにブレーキはないの！", "你被當成灰塵掃掉了。": "ほこりと一緒に掃かれちゃった。", "巫婆說：下次記得靠右爬。": "次は右側を登りなさい、と魔女が言った。", "飛天掃把交通事故，傑克負全責。": "ほうきの交通事故。ジャックの過失100パーセント。", "嗯？": "ん？", "拿到金蛋了！耶！": "やったー！金の卵、ゲット！"};
+const JA_CHANT = 'だるまさんが、ころんだ！';
 const VO = { mom: { pitch: 1.6, rate: 1.3 }, giant: { pitch: .1, rate: .85 }, chant: { pitch: .1, rate: 1.4 }, jack: { pitch: 1.4, rate: 1.15 }, story: { pitch: 1, rate: 1.05 } };
 function say(text, o = {}, interrupt = true) {
   if (!TTS || (muted && o.volume !== 0)) return;
   try {
     if (!interrupt && (speechSynthesis.speaking || speechSynthesis.pending)) return;
     if (interrupt) speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text); u.lang = 'zh-TW'; if (VOICE) u.voice = VOICE;
+    const u = new SpeechSynthesisUtterance(o.volume === 0 ? text : (JA[text] || text)); u.lang = 'ja-JP'; if (VOICE) u.voice = VOICE;
     u.pitch = o.pitch ?? 1; u.rate = o.rate ?? 1; u.volume = o.volume ?? 1;
     speechSynthesis.speak(u);
   } catch (e) {}
@@ -905,7 +908,7 @@ function fail(reason) {
     $('fReason').textContent = REASON[reason];
     const q = pick(QUOTES[reason]);
     $('fQuote').textContent = '「' + q + '」';
-    say(q.replace(/^(巫婆|風)說?：/, ''), reason === 'mom' ? VO.mom : reason === 'giant' ? VO.giant : VO.story);
+    say(q, reason === 'mom' ? VO.mom : reason === 'giant' ? VO.giant : VO.story);
     $('fDetail').textContent = G.inGiant ? `就差一點點！（進度 ${Math.round(G.gi.p * 100)}%）` : `爬到 ${Math.round(clamp(G.h, 0, TOP))} / ${TOP} 公尺`;
     panel('pFail');
   }, 800);
@@ -1241,7 +1244,7 @@ function updGiant(dt) {
     case 'back': {
       const n = Math.min(6, Math.max(1, Math.ceil(6 * g.t / g.dur)));
       chant(CH.slice(0, n).join('、'));
-      if (n > (g.sung || 0)) { g.sung = n; SFX.chant(n - 1); say(CH[n - 1], VO.chant); }
+      if (n > (g.sung || 0)) { g.sung = n; SFX.chant(n - 1); if (n === 1) say(JA_CHANT, { pitch: VO.chant.pitch, rate: clamp(1.7 / g.dur, .7, 1.8) }); }
       if (g.t >= g.dur) { g.state = 'turning'; g.t = 0; SFX.turn(); buzz(40); setTimeout(() => { if (G.gi && G.gi.state !== 'back') say('嗯？', VO.giant); }, 250); }
       break;
     }

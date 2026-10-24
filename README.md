@@ -41,7 +41,7 @@
 ## 技術說明
 
 - 單一 `index.html`，沒有外部圖片、函式庫、伺服器或 AI：畫面用 Canvas 2D 即時繪製（瓦楞紙手作風：紙板、紙膠帶、圖釘、毛氈），音效用 Web Audio 合成，震動用 Vibration API。
-- 配音用瀏覽器內建的語音朗讀（Web Speech API）：媽媽高音快嘴、巨人低沉唸口訣、失敗時念出好笑的那句話。聲音依手機內建的中文語音而不同；右上角喇叭可關閉。
+- 配音用瀏覽器內建的語音朗讀（Web Speech API），講日文：畫面上的字是中文，聲音念對應的日文台詞（巨人念「だるまさんがころんだ」，就是日本版的一二三木頭人）。聲音依手機內建的日文語音而不同；右上角喇叭可關閉。
 - 操作用 Pointer Events，手指和滑鼠都適用。
 - 字型用 [jf open 粉圓（Huninn）](https://fonts.google.com/specimen/Huninn)，從 Google Fonts 載入；沒有網路時自動改用手機內建字型。
 - 部署：GitHub Pages（Settings → Pages → Deploy from a branch）。
