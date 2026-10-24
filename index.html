@@ -70,12 +70,12 @@ h2{margin:0 0 4px;font-size:26px;color:#e0679a}
     <p class="sub">爬上魔豆、躲過媽媽，搶走巨人的金蛋！</p>
     <div class="how">
       ① 點土地種下魔豆<br>
-      ② <b>點畫面任何地方</b>往上爬（點太快會滑手）<br>
-      ③ <b>橫滑</b>換到另一根藤：閃開小鳥、巫婆、綿羊、豌豆，繞過斷藤、毛毛蟲、蜂窩<br>
-      ④ 看到<b>熱氣球</b>，橫滑跳上去！<br>
+      ② <b>點傑克那一邊</b>往上爬（點太快會滑手）<br>
+      ③ <b>點另一邊</b>跳到另一根藤：閃開小鳥、巫婆、綿羊、豌豆，繞過斷藤、毛毛蟲、蜂窩<br>
+      ④ 熱氣球飄到中間時<b>點另一邊</b>跳上去！<br>
       ⑤ 大風來時<b>按住不要動</b><br>
       ⑥ 巨人背對時<b>按住前進</b>，轉頭就<b>放開</b>！<br>
-      <span class="pc">電腦也能玩：用滑鼠點擊、拖曳、按住</span>
+      <span class="pc">電腦也能玩：用滑鼠點擊、按住</span>
     </div>
     <div class="best" id="tBest"></div>
     <button class="btn green" id="bStart">開始</button>
@@ -560,7 +560,7 @@ function startClimb() {
   scene = 'climb'; sceneT = 0;
   G.h = G.vh = 1.5; G.stalk = G.from = 1; G.momH = -3.5;
   G.momDelay = firstEver ? 1.6 : .7;
-  hint(firstEver ? '一直點畫面就能往上爬，快爬！' : '快爬！', firstEver ? 2.6 : 1);
+  hint(firstEver ? '點傑克那一邊往上爬，點另一邊換藤！' : '快爬！', firstEver ? 2.6 : 1);
 }
 function fail(reason) {
   if (scene === 'fail' || scene === 'win') return;
@@ -665,7 +665,7 @@ function swipeSide(to) {
   if (hv) sting(hv);
 }
 function onDown(x) {
-  if (scene === 'climb') stroke();
+  if (scene === 'climb') { const side = x < W / 2 ? 0 : 1; if (side === G.stalk || G.windBlow) stroke(); else swipeSide(side); }
   else if (scene === 'plant') plant();
   else if (scene === 'grow' && sceneT > 1) { scene = 'mom'; sceneT = 0; camH = 4; grown = TOP + 3; G.bubble = '傑克！我們家的牛呢！'; SFX.door(); }
 }
@@ -674,10 +674,6 @@ function onMove(d) {
   const e = G.ev;
   if (e && e.type === 'wind' && e.phase === 'blow') { e.grip -= d * 1.3; return; }
   if (ptr.y > ptr.oy) ptr.oy = ptr.y;
-  const dx = ptr.x - ptr.ox, dy = Math.abs(ptr.y - ptr.oy);
-  // 任何方向的橫滑都換到另一根藤
-  if (Math.abs(dx) >= 36 && dy < Math.abs(dx) * .9) { swipeSide(1 - G.stalk); ptr.ox = ptr.x; ptr.oy = ptr.y; }
-  else if (dy > 60) { ptr.ox = ptr.x; ptr.oy = ptr.y; }
 }
 function pos(e) { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
 cv.addEventListener('pointerdown', e => {
@@ -707,7 +703,7 @@ function startEvent(e) {
       G.breaks.push({ stalk: G.stalk, h: bh });
       G.coins = G.coins.filter(c => !(c.stalk === G.stalk && c.h > bh - .8 && c.h < bh + 2.2));
       G.ev = { type: 'break', bh, t: 0 };
-      hint(first ? '前面藤蔓斷了！左右橫滑換到另一根' : '前面斷了！換邊！', first ? 2.2 : 1.2);
+      hint(first ? '前面藤蔓斷了！點另一邊換藤' : '前面斷了！換邊！', first ? 2.2 : 1.2);
       return;
     }
   }
@@ -729,7 +725,7 @@ function startEvent(e) {
     SFX.cackle(); hint(first ? '巫婆會橫掃整排！等她飛過另一根藤，再換過去' : '巫婆來了！看準時機！', first ? 2.6 : 1.2);
   } else if (e.type === 'balloon') {
     G.ev = { type: 'balloon', t: 0, dur: 5, from: rs(), x: -999 };
-    SFX.dodge(); hint(first ? '熱氣球！趁它飄到兩根藤中間，橫滑跳上去！' : '熱氣球！跳上去！', first ? 2.6 : 1.3);
+    SFX.dodge(); hint(first ? '熱氣球！飄到兩根藤中間時，點另一邊跳上去！' : '熱氣球！跳上去！', first ? 2.6 : 1.3);
   } else if (e.type === 'sheep') {
     G.ev = { type: 'sheep', phase: 'warn', t: 0, warn: first ? 1.8 : 1.3, from: rs(), target: G.stalk, x: -999, lx: 0 };
     SFX.baa(); hint(first ? '咩～綿羊要從雲裡衝出來！換邊閃開' : '咩～綿羊來了！', first ? 2 : 1);
@@ -738,7 +734,7 @@ function startEvent(e) {
     hint(first ? '巨人在丟豌豆！看到紅色記號就換邊' : '豌豆又來了！', first ? 2 : 1);
   } else if (e.type === 'bird') {
     G.ev = { type: 'bird', phase: 'warn', t: 0, warn: first ? 2 : 1.6, from: rs(), target: G.stalk, x: 0, y: 0 };
-    SFX.tweet(); hint(first ? '小鳥要來啄你了！左右橫滑閃開！' : '小鳥來了！閃！', first ? 1.8 : 1);
+    SFX.tweet(); hint(first ? '小鳥要來啄你了！點另一邊換藤閃開！' : '小鳥來了！閃！', first ? 1.8 : 1);
   } else if (e.type === 'wind') {
     G.ev = { type: 'wind', phase: 'warn', t: 0, grip: 100, dir: Math.random() < .5 ? -1 : 1 };
     SFX.windWarn(); hint('大風要來了！手指按住螢幕不要動！', 1.8);
@@ -1173,7 +1169,7 @@ function drawBirdEvent() {
       sh(false); ctx.strokeStyle = `rgba(240,112,143,${.55 + .35 * Math.sin(T * 14)})`; ctx.lineWidth = 4 * U;
       ctx.beginPath(); ctx.arc(tx, jy, 30 * U * p, 0, Math.PI * 2); ctx.stroke();
       limb(tx - 38 * U, jy, tx - 24 * U, jy, '#f0708f', 3 * U, false); limb(tx + 24 * U, jy, tx + 38 * U, jy, '#f0708f', 3 * U, false);
-      text(e.target ? '← 滑開' : '滑開 →', stalkX(1 - e.target, G.vh), jy - 30 * U, 20 * U, '#e0679a');
+      text('點這邊！', stalkX(1 - e.target, G.vh), jy - 30 * U, 20 * U, '#e0679a');
     }
   } else if (e.phase === 'fly') {
     const u = clamp(e.t / .55, 0, 1), sx = e.from ? W + 40 : -40;
@@ -1208,11 +1204,16 @@ function drawClimbUI() {
     rr(W / 2 - 96, by + 30, 192 * clamp(e.grip / 100, 0, 1), 12, 6, e.grip > 40 ? '#7fcf8f' : '#f0708f', false);
   } else if (scene === 'climb') {
     const hp = clamp(G.heat / 100, 0, 1);
-    rr(W / 2 - 84, by + 4, 168, 48, 18, `rgba(255,231,163,${.75 + .12 * Math.sin(T * 6)})`, false);
-    text('點畫面爬・橫滑換藤', W / 2, by + 20, 15, '#6b4a5a', null);
-    rr(W / 2 - 60, by + 34, 120, 9, 4.5, 'rgba(255,248,234,.9)', false);
-    rr(W / 2 - 60, by + 34, Math.max(9, 120 * hp), 9, 4.5, hp < .6 ? '#7fcf8f' : hp < .82 ? '#ffc46b' : '#f0708f', false);
-    if (hp > .75) text('太快會滑手！', W / 2, by - 8, 14, '#e0679a');
+    for (let s2 = 0; s2 < 2; s2++) {
+      const cx = W * (s2 ? .78 : .22), mine = s2 === G.stalk;
+      rr(cx - 50, by, 100, 52, 18, mine ? `rgba(255,231,163,${.8 + .12 * Math.sin(T * 6)})` : 'rgba(255,248,234,.6)', false);
+      if (mine) poly([[cx - 9, by + 18], [cx, by + 7], [cx + 9, by + 18]], '#e0679a', false);
+      text(mine ? '點這邊爬' : (s2 ? '跳過去 →' : '← 跳過去'), cx, by + (mine ? 35 : 26), 15, mine ? '#6b4a5a' : 'rgba(107,74,90,.6)', null);
+    }
+    text('速度', W / 2, by + 12, 13, '#6b4a5a');
+    rr(W / 2 - 28, by + 24, 56, 10, 5, 'rgba(255,248,234,.9)', false);
+    rr(W / 2 - 28, by + 24, Math.max(10, 56 * hp), 10, 5, hp < .6 ? '#7fcf8f' : hp < .82 ? '#ffc46b' : '#f0708f', false);
+    if (hp > .75) text('太快會滑手！', W / 2, by - 10, 14, '#e0679a');
   }
   for (const f of G.floats) { ctx.globalAlpha = 1 - f.t; text(f.s, f.x, f.y - f.t * 40 * U, 20 * U, f.c); ctx.globalAlpha = 1; }
 }
