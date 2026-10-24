@@ -1483,11 +1483,13 @@ function drawGiantMouth(x, y, open) {
   ell(x, y, mw, ih, '#3a0f0c', 0, false);
   if (open > .25) ell(x, y + ih * .55, mw * .45, ih * .4, '#c9534a', 0, false);
   const edge = (tx, sgn) => y + sgn * ih * Math.sqrt(Math.max(0, 1 - Math.pow((tx - x) / mw, 2))) * .96;
+  // 方方的大板牙（有蛀牙、黃牙、缺一顆）
   const tooth = (tx, sgn, i, n) => {
-    const tw = mw / n * .95, th = W * .038 * (1 - Math.abs(i / (n - 1) - .5) * .5), ty = edge(tx, sgn);
-    const col = i === 1 ? '#d8c690' : '#f6f0dc';
-    poly([[tx - tw, ty - sgn * 2], [tx + tw, ty - sgn * 2], [tx, ty + sgn * -th * -1]], col);
-    if ((sgn < 0 && (i === 2 || i === 5)) || (sgn > 0 && i === 3)) { circ(tx, ty + sgn * th * .35, tw * .32, '#3a2412', false); circ(tx + tw * .25, ty + sgn * th * .2, tw * .15, '#5a3a1e', false); }
+    const tw = mw / n * .86, th = W * (.03 + ((i * 7) % 3) * .004), ty = edge(tx, sgn) + sgn * 2;
+    const y0 = sgn < 0 ? ty : ty - th;
+    rr(tx - tw, y0, tw * 2, th, 3 * U, i === 1 ? '#d8c690' : '#f6f0dc');
+    sh(false); ctx.strokeStyle = 'rgba(120,100,60,.35)'; ctx.lineWidth = 1 * U; rrPath(tx - tw, y0, tw * 2, th, 3 * U); ctx.stroke();
+    if ((sgn < 0 && (i === 2 || i === 5)) || (sgn > 0 && i === 3)) { circ(tx - tw * .15, y0 + th * .5, tw * .38, '#3a2412', false); circ(tx + tw * .35, y0 + th * .3, tw * .16, '#5a3a1e', false); }
   };
   for (let i = 0, n = 8; i < n; i++) if (i !== 4) tooth(x - mw * .82 + i * mw * 1.64 / (n - 1), -1, i, n);
   for (let i = 0, n = 6; i < n; i++) tooth(x - mw * .7 + i * mw * 1.4 / (n - 1), 1, i, n);
