@@ -40,7 +40,7 @@
 
 ## 技術說明
 
-- 單一 `index.html`，沒有外部圖片、函式庫、伺服器或 AI：畫面用 Canvas 2D 即時繪製（分層剪紙風、馬卡龍色系），音效用 Web Audio 合成，震動用 Vibration API。
+- 單一 `index.html`，沒有外部圖片、函式庫、伺服器或 AI：畫面用 Canvas 2D 即時繪製（瓦楞紙手作風：紙板、紙膠帶、圖釘、毛氈），音效用 Web Audio 合成，震動用 Vibration API。
 - 操作用 Pointer Events，手指和滑鼠都適用。
 - 部署：GitHub Pages（Settings → Pages → Deploy from a branch）。
 
