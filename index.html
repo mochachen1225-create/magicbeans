@@ -794,7 +794,7 @@ function startEvent(e) {
     hint(first ? '巨人在丟豌豆！看到紅色記號就換邊' : '豌豆又來了！', first ? 2 : 1);
   } else if (e.type === 'bird') {
     G.ev = { type: 'bird', phase: 'warn', t: 0, warn: first ? 2 : 1.6, from: rs(), target: G.stalk, x: 0, y: 0 };
-    SFX.tweet(); hint(first ? '小鳥要來啄你了！點別根藤閃開！' : '小鳥來了！閃！', first ? 1.8 : 1);
+    SFX.tweet(); buzz(40); hint(first ? '小鳥要來啄你了！點別根藤閃開！' : '小鳥來了！閃！', first ? 1.8 : 1);
   } else if (e.type === 'wind') {
     G.ev = { type: 'wind', phase: 'warn', t: 0, grip: 100, dir: Math.random() < .5 ? -1 : 1 };
     SFX.windWarn(); hint('大風要來了！手指按住螢幕不要動！', 1.8);
@@ -804,10 +804,9 @@ function updEvent(dt) {
   const e = G.ev; e.t += dt;
   if (e.type === 'bird') {
     if (e.phase === 'warn' && e.t >= e.warn) { e.phase = 'fly'; e.t = 0; SFX.tweet(); }
-    else if (e.phase === 'fly' && e.t >= .55) {
+    else if (e.phase === 'fly' && e.t >= .75) {
       if (Math.abs(jackX() - stalkX(e.target, G.vh)) < 26 * U) {
-        if (G.pecked) { fail('bird'); return; }
-        G.pecked = true; knock(3, '被小鳥啄了一下！再被啄就會掉下去喔');
+        G.peckT = 3; knock(2.5, '被小鳥啄了一下！快爬，媽媽追上來了！');
       } else {
         SFX.dodge(); float('閃過！', stalkX(e.target, G.vh), sy(G.vh) - 60 * U, '#5aa6dc');
       }
@@ -927,7 +926,8 @@ function updClimb(dt) {
   else { G.momLineT = 0; G.momTalk = Math.min(G.momTalk, .6); }
   if (G.momLineT > 0) G.momLineT -= dt;
   if (G.momH > 0) G.minGap = Math.min(G.minGap, G.h - G.momH);
-  if (G.momH >= G.h - 1) { fail('mom'); return; }
+  if (G.peckT > 0) G.peckT -= dt;
+  if (G.momH >= G.h - 1) { fail(G.peckT > 0 ? 'bird' : 'mom'); return; }
   if (!G.ev && G.events.length && G.h >= G.events[0].h) startEvent(G.events.shift());
   if (G.ev) { updEvent(dt); if (scene !== 'climb') return; }
   if (G.h >= TOP) { scene = 'toGiant'; sceneT = 0; G.ev = null; G.windBlow = false; }
@@ -1231,7 +1231,10 @@ function drawBirdEvent() {
   const e = G.ev, jy = sy(G.vh) - 12 * U, tx = stalkX(e.target, G.vh), dir = e.from ? -1 : 1;
   if (e.phase === 'warn') {
     const ex = e.from ? W - 26 * U : 26 * U, p = 1 + .15 * Math.sin(T * 18);
-    drawBird(e.from ? W + 2 * U : -2 * U, jy - 50 * U, 1, dir, T);
+    const eg = ctx.createLinearGradient(e.from ? W : 0, 0, e.from ? W - 60 * U : 60 * U, 0);
+    eg.addColorStop(0, `rgba(240,112,143,${.35 + .2 * Math.sin(T * 14)})`); eg.addColorStop(1, 'rgba(240,112,143,0)');
+    ctx.fillStyle = eg; ctx.fillRect(e.from ? W - 60 * U : 0, 0, 60 * U, H);
+    drawBird(e.from ? W - 6 * U : 6 * U, jy - 50 * U + Math.sin(T * 8) * 4 * U, 1.35, dir, T);
     circ(ex, jy - 50 * U, 15 * U * p, '#f0708f');
     text('!', ex, jy - 49 * U, 22 * U, '#fff', null);
     if (Math.abs(jackX() - tx) < 26 * U) {
@@ -1241,7 +1244,7 @@ function drawBirdEvent() {
       for (let q = 0; q < 3; q++) if (q !== e.target) text('點這邊！', stalkX(q, G.vh), jy - 30 * U, 17 * U, '#e0679a');
     }
   } else if (e.phase === 'fly') {
-    const u = clamp(e.t / .55, 0, 1), sx = e.from ? W + 40 : -40;
+    const u = clamp(e.t / .75, 0, 1), sx = e.from ? W + 40 : -40;
     e.x = lerp(sx, tx, u); e.y = lerp(jy - 70 * U, jy, u * u);
     drawBird(e.x, e.y, 1.15, dir, T, dir * u * .5);
   } else {
