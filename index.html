@@ -205,6 +205,14 @@ const SFX = {
   baa() { tone(320, .35, 'sawtooth', .07, 280); tone(330, .3, 'sawtooth', .05, 300, .05); },
   drop() { tone(900, .4, 'sine', .12, 200); },
   fail() { tone(392, .22, 'triangle', .22, 380); tone(370, .22, 'triangle', .22, 350, .24); tone(349, .6, 'triangle', .22, 260, .48); },
+  // 巨人唱「一二三木頭人」：像大號一樣低沉的旋律，一個字一個音
+  chant(i) {
+    const f = [131, 147, 165, 196, 165, 262][i] || 131, last = i >= 5;
+    tone(f, last ? .5 : .3, 'square', .06); tone(f / 2, last ? .55 : .34, 'triangle', .22); tone(f * 1.5, .12, 'sine', .04);
+    noise(.08, .18, 180, 90, 0, .7);
+    if (last) { tone(f * 2, .35, 'triangle', .1, f * 2.2, .05); noise(.25, .3, 120, 60, 0, .6); }
+  },
+  heart() { tone(62, .16, 'sine', .4, 48); tone(58, .14, 'sine', .3, 45, .16); },
   win() { [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, i === 4 ? .5 : .18, 'triangle', .2, null, i * .11)); }
 };
 function buzz(p) { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
@@ -1135,22 +1143,26 @@ function updGiant(dt) {
   }
   const CH = ['一', '二', '三', '木', '頭', '人'];
   switch (g.state) {
-    case 'back':
-      chant(CH.slice(0, Math.max(1, Math.ceil(6 * g.t / g.dur))).join('、'));
+    case 'back': {
+      const n = Math.min(6, Math.max(1, Math.ceil(6 * g.t / g.dur)));
+      chant(CH.slice(0, n).join('、'));
+      if (n > (g.sung || 0)) { g.sung = n; SFX.chant(n - 1); }
       if (g.t >= g.dur) { g.state = 'turning'; g.t = 0; SFX.turn(); buzz(40); }
       break;
+    }
     case 'turning':
       chant('一、二、三、木、頭、人！');
       if (g.t >= .5) { g.state = 'front'; g.t = 0; g.dur = rnd(1.2, 2.2); }
       break;
     case 'front':
       chant('不准動！');
+      if ((g.beatT = (g.beatT || 0) - dt) <= 0) { g.beatT = .6; SFX.heart(); }
       if (ptr.down && g.t > .12) { fail('giant'); return; }
       if (g.t >= g.dur) { g.state = 'turnback'; g.t = 0; }
       break;
     case 'turnback':
       chant('');
-      if (g.t >= .35) { g.state = 'back'; g.t = 0; g.dur = rnd(1, 2.8); }
+      if (g.t >= .35) { g.state = 'back'; g.t = 0; g.dur = rnd(1, 2.8); g.sung = 0; g.beatT = 0; }
       break;
   }
   if (g.p >= 1) win();
