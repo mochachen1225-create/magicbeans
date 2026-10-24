@@ -282,6 +282,7 @@ function initPats() {
   PAT.skin = makePat('#eab48a', 'rgba(150,90,50,.12)', 'rgba(140,80,40,.22)');
   PAT.skinD = makePat('#d99467', 'rgba(130,70,30,.14)', 'rgba(120,60,30,.25)');
   PAT.hair = makePat('#6e4426', 'rgba(30,15,5,.22)', 'rgba(255,220,180,.15)');
+  PAT.gray = makePat('#b9bec2', 'rgba(60,60,70,.14)', 'rgba(50,50,60,.25)');
   PAT.purple = makePat('#7b5ea7', '', ['rgba(255,255,255,.14)', 'rgba(30,10,40,.22)'], 700, false);
 }
 // 一片有厚度的紙板：先畫側邊（厚度＋陰影），再畫正面
@@ -431,33 +432,69 @@ function paintGround(w, h) {
   corrug(0, gy + h * .2 - 2, w, 7 * U);
   for (let i = 0; i < 16; i++) { const x = (i * 97 % 100) / 100 * w, y = gy + 14 + ((i * 53) % 100) / 100 * h * .14; circ(x, y, 3.2 * U, ['#f0c443', '#d64f45', '#f7f1e3'][i % 3]); circ(x, y, 1.2 * U, '#7a4a20', false); }
   pin(w * .52, gy + h * .1, '#3b9c97');
-  // 傑克家（紙箱屋）
-  const u = U, hx = w * .03, hw = w * .32, wh = 76 * u, dx = w * .19, HS = 1.3;
-  ctx.save(); ctx.translate(hx, gy); ctx.scale(HS, HS); ctx.translate(-hx, -gy);
-  const chx = hx + hw * .72;
-  card(() => { ctx.beginPath(); ctx.rect(chx, gy - wh - 62 * u, 17 * u, 46 * u); }, PAT.kraftL, '#8a6436', 3);
-  HOUSE = { cx: hx + (chx + 8.5 * u - hx) * HS, dy: -(wh + 66 * u) * HS, door: (hx + (dx - 19 * u - hx) * HS) / w };
-  card(() => { ctx.beginPath(); ctx.rect(hx, gy - wh, hw, wh); }, PAT.kraft, '#7f5a30', 6);
-  corrug(hx, gy - wh, hw, 6 * u);
-  const rl = hx - 14 * u, rx = hx + hw + 14 * u, ry = gy - wh + 4 * u, pk = gy - wh - 62 * u, mid = hx + hw / 2;
-  card(() => { ctx.beginPath(); ctx.moveTo(rl, ry); ctx.lineTo(mid - 10 * u, pk); ctx.lineTo(mid + 10 * u, pk); ctx.lineTo(rx, ry); ctx.closePath(); }, PAT.red, '#7e2620', 6);
-  corrug(rl, ry - 3 * u, rx - rl, 7 * u);
-  sh(false); ctx.strokeStyle = 'rgba(80,20,10,.25)'; ctx.lineWidth = 1.5 * u;
-  for (let i = 1; i < 4; i++) { const t = i / 4; ctx.beginPath(); ctx.moveTo(lerp(rl, mid - 10 * u, t), lerp(ry, pk, t)); ctx.lineTo(lerp(rx, mid + 10 * u, t), lerp(ry, pk, t)); ctx.stroke(); }
-  // 門：割開的紙板門
-  rr(dx - 13 * u, gy - 46 * u, 26 * u, 46 * u, 3 * u, '#2e2014', false);
-  card(() => { ctx.beginPath(); ctx.moveTo(dx - 13 * u, gy - 46 * u); ctx.lineTo(dx - 26 * u, gy - 42 * u); ctx.lineTo(dx - 26 * u, gy + 2 * u); ctx.lineTo(dx - 13 * u, gy); ctx.closePath(); }, PAT.kraftL, '#8a6436', 2);
-  circ(dx - 22 * u, gy - 21 * u, 2 * u, '#f0c443');
-  // 窗戶＋紙膠帶
-  const wcx = hx + hw * .2, wt = gy - wh * .62;
-  rr(wcx - 13 * u, wt, 26 * u, 22 * u, 2, '#2e2014', false);
-  rr(wcx - 11 * u, wt + 2 * u, 22 * u, 18 * u, 2, '#f6dc8c', false);
-  tape(wcx, wt + 11 * u, 32 * u, 7 * u, .6, '#3b9c97'); tape(wcx, wt + 11 * u, 32 * u, 7 * u, -.6, '#f0c443', 'stripes');
-  barcode(hx + hw * .64, gy - wh + 12 * u, hw * .3, 20 * u);
-  label(hx + hw * .78, gy - wh * .35, 34 * u, 15 * u, '#d64f45', '易碎', '#fff', -.06);
-  stamp(hx + hw * .5, gy - wh * .74, 10 * u, 'BEANS');
-  tape(hx + 4 * u, gy - wh + 8 * u, 28 * u, 9 * u, -.7, '#f0c443', 'stripes');
-  ctx.restore();
+  // 傑克家（紅色穀倉農舍，紙板手作）
+  const u = U, white = '#f7f1e3', plank = 'rgba(90,20,10,.22)';
+  const stones = (x0, x1, y) => {
+    card(() => rrPath(x0, y - 13 * u, x1 - x0, 15 * u, 3 * u), '#a9a59c', '#6f6a60', 3);
+    for (let x = x0 + 5 * u, i = 0; x < x1 - 4 * u; x += 11 * u, i++) ell(x + 3 * u, y - 6 * u + (i % 2) * 2 * u, 5 * u, 3.6 * u, i % 3 ? '#c4c0b6' : '#b4b0a6', 0, false);
+  };
+  const planks = (x0, x1, y0, y1) => { sh(false); ctx.strokeStyle = plank; ctx.lineWidth = 1.2 * u; for (let x = x0 + 8 * u; x < x1 - 2; x += 8 * u) { ctx.beginPath(); ctx.moveTo(x, y0); ctx.lineTo(x, y1); ctx.stroke(); } };
+  const trim = (pts, lw = 4) => { sh(false); ctx.strokeStyle = white; ctx.lineWidth = lw * u; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.beginPath(); pts.forEach((q, i) => i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1])); ctx.stroke(); };
+  const win = (cx, cy, ww, wh2) => {
+    rr(cx - ww / 2 - 2 * u, cy - wh2 / 2 - 2 * u, ww + 4 * u, wh2 + 4 * u, 2, white);
+    rr(cx - ww / 2, cy - wh2 / 2, ww, wh2, 1.5, '#4a2a22', false);
+    limb(cx, cy - wh2 / 2, cx, cy + wh2 / 2, white, 2 * u, false); limb(cx - ww / 2, cy, cx + ww / 2, cy, white, 2 * u, false);
+  };
+  // 筒倉（後面）
+  const sx0 = -w * .03, sw = w * .12, stop = gy - 178 * u;
+  card(() => { ctx.beginPath(); ctx.rect(sx0, stop, sw, gy - stop); }, PAT.gray, '#6f747a', 5);
+  const sg = ctx.createLinearGradient(sx0, 0, sx0 + sw, 0); sg.addColorStop(0, 'rgba(40,40,50,.25)'); sg.addColorStop(.45, 'rgba(255,255,255,.2)'); sg.addColorStop(1, 'rgba(40,40,50,.3)');
+  sh(false); ctx.fillStyle = sg; ctx.fillRect(sx0, stop, sw, gy - stop);
+  card(() => { ctx.beginPath(); ctx.ellipse(sx0 + sw / 2, stop, sw / 2, sw * .42, 0, Math.PI, 0); ctx.closePath(); }, PAT.gray, '#6f747a', 3);
+  for (let y = stop + 26 * u; y < gy - 20 * u; y += 26 * u) limb(sx0, y, sx0 + sw, y, 'rgba(60,60,70,.3)', 1.5 * u, false);
+  barcode(sx0 + sw * .2, stop + 40 * u, sw * .65, 16 * u);
+  // 側屋（左邊，有煙囪）
+  const wx0 = w * .02, wx1 = w * .12, wwh = 62 * u;
+  card(() => { ctx.beginPath(); ctx.rect(wx0, gy - wwh, wx1 - wx0, wwh); }, PAT.red, '#7e2620', 5);
+  planks(wx0, wx1, gy - wwh, gy);
+  HOUSE = { cx: wx0 + 12 * u, dy: -(wwh + 40 * u), door: .26 };
+  card(() => { ctx.beginPath(); ctx.moveTo(wx0 - 8 * u, gy - wwh + 2 * u); ctx.lineTo(wx0 + (wx1 - wx0) * .45, gy - wwh - 30 * u); ctx.lineTo(wx1 + 8 * u, gy - wwh + 2 * u); ctx.closePath(); }, PAT.red, '#6e1f1a', 4);
+  trim([[wx0 - 8 * u, gy - wwh + 2 * u], [wx0 + (wx1 - wx0) * .45, gy - wwh - 30 * u], [wx1 + 8 * u, gy - wwh + 2 * u]]);
+  limb(wx0 + 12 * u, gy - wwh - 34 * u, wx0 + 12 * u, gy - wwh - 8 * u, '#5a5a60', 6 * u); rr(wx0 + 7 * u, gy - wwh - 38 * u, 10 * u, 5 * u, 2, '#45454b');
+  win((wx0 + wx1) / 2, gy - wwh * .55, 20 * u, 18 * u);
+  stones(wx0 - 2 * u, wx1, gy + 2 * u);
+  // 主穀倉
+  const bx = w * .26, bw = w * .32, bl = bx - bw / 2, br = bx + bw / 2, wh = 100 * u, eave = gy - wh;
+  const roof = [[bl - 9 * u, eave + 4 * u], [bl + bw * .1, eave - 42 * u], [bx, eave - 76 * u], [br - bw * .1, eave - 42 * u], [br + 9 * u, eave + 4 * u]];
+  card(() => { ctx.beginPath(); ctx.rect(bl, eave, bw, wh); }, PAT.red, '#7e2620', 6);
+  card(() => { ctx.beginPath(); roof.forEach((q, i) => i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1])); ctx.closePath(); }, PAT.red, '#6e1f1a', 5);
+  planks(bl, br, eave - 40 * u, gy);
+  sh(false); ctx.save(); ctx.beginPath(); roof.forEach((q, i) => i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1])); ctx.closePath(); ctx.clip();
+  ctx.fillStyle = 'rgba(60,10,5,.18)'; ctx.fillRect(bl - 10 * u, eave - 70 * u, bw + 20 * u, 70 * u); ctx.restore();
+  planks(bl + bw * .1, br - bw * .1, eave - 40 * u, eave + 2 * u);
+  trim(roof, 5);
+  trim([[bl, eave + 2 * u], [br, eave + 2 * u]], 4);
+  trim([[bl + 1.5 * u, eave], [bl + 1.5 * u, gy - 12 * u]], 3); trim([[br - 1.5 * u, eave], [br - 1.5 * u, gy - 12 * u]], 3);
+  [-1, 0, 1].forEach(i => win(bx + i * 19 * u, eave - 30 * u, 15 * u, 17 * u));
+  // 白色交叉大門（左扇關、右扇打開，看得到乾草）
+  const dw = bw * .42, dh = wh * .64, dl = bx - dw / 2, dt = gy - 12 * u - dh;
+  rr(dl - 3 * u, dt - 3 * u, dw + 6 * u, dh + 3 * u, 2, white);
+  rr(dl, dt, dw, dh, 1, '#2e1a12', false);
+  card(() => { ctx.beginPath(); ctx.moveTo(bx + 2 * u, gy - 12 * u); ctx.quadraticCurveTo(bx + dw * .25, dt + dh * .35, dl + dw - 2 * u, gy - 12 * u); ctx.closePath(); }, PAT.yellow, '#b8862a', 2);
+  const xdoor = (x0, y0, ww, hh) => {
+    rr(x0, y0, ww, hh, 1, PAT.red, false);
+    sh(false); ctx.strokeStyle = white; ctx.lineWidth = 3 * u; ctx.strokeRect(x0 + 1.5 * u, y0 + 1.5 * u, ww - 3 * u, hh - 3 * u);
+    ctx.beginPath(); ctx.moveTo(x0 + 2 * u, y0 + 2 * u); ctx.lineTo(x0 + ww - 2 * u, y0 + hh - 2 * u); ctx.moveTo(x0 + ww - 2 * u, y0 + 2 * u); ctx.lineTo(x0 + 2 * u, y0 + hh - 2 * u); ctx.stroke();
+  };
+  xdoor(dl, dt, dw / 2, dh);
+  ctx.save(); ctx.translate(dl + dw, dt); ctx.transform(1, .12, 0, 1, 0, 0); xdoor(0, 0, dw * .32, dh); ctx.restore();
+  rr(dl - 6 * u, dt - 9 * u, dw + 12 * u, 5 * u, 2, white);
+  win(bl + bw * .14, eave + wh * .4, 16 * u, 18 * u); win(br - bw * .14, eave + wh * .4, 16 * u, 18 * u);
+  stones(bl - 3 * u, br + 3 * u, gy + 2 * u);
+  // 手作小道具
+  tape(br - 6 * u, eave + 10 * u, 28 * u, 9 * u, .7, '#f0c443', 'stripes');
+  tape(bl + 2 * u, eave - 30 * u, 26 * u, 9 * u, -.8, '#3b9c97');
+  pin(bx, eave - 60 * u, '#f0c443');
   // 空空的牛棚：乾草、空水桶、打開的柵門（牛牛被換成豆子了）
   const px0 = w * .76;
   card(() => { ctx.beginPath(); ctx.moveTo(w * .78, gy + 2); ctx.quadraticCurveTo(w * .79, gy - 52 * U, w * .835, gy - 46 * U); ctx.quadraticCurveTo(w * .88, gy - 54 * U, w * .9, gy + 2); ctx.closePath(); }, PAT.yellow, '#b8862a', 2);
