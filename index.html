@@ -1180,7 +1180,11 @@ function updClimb(dt) {
   G.vh += (G.h - G.vh) * Math.min(1, dt * 14);
   camH += (Math.max(4, G.vh) - camH) * Math.min(1, dt * 8);
   if (G.momDelay > 0) G.momDelay -= dt;
-  else if (!G.windBlow) G.momH += (2 + Math.min(.7, Math.max(0, G.h) * .008)) * dt;
+  else if (!G.windBlow) {
+    const gap = G.h - G.momH;
+    // 還沒破過關的新手，媽媽稍微慢一點
+    G.momH += ((firstEver ? 2.2 : 2.5) + Math.min(.8, Math.max(0, G.h) * .01) + Math.max(0, gap - 8) * .25) * dt;
+  }
   // 媽媽也只能抓在藤上：跟著傑克換藤，但慢半拍、用跳的；遇到斷掉的地方先跳到別根
   const gapAt = (st, h) => G.breaks.some(b => b.stalk === st && h > b.h - .5 && h < b.h + 2);
   let want = G.stalk;
@@ -1188,7 +1192,7 @@ function updClimb(dt) {
   if (G.momHop > 0) { G.momHop -= dt; if (G.momHop <= 0) G.momStalk = G.momTo; }
   else if (want !== G.momStalk && G.momH > 0) {
     G.momWait += dt;
-    if (G.momWait > .7 || gapAt(G.momStalk, G.momH + .6)) { G.momWait = 0; G.momTo = want; G.momHop = .3; }
+    if (G.momWait > .4 || gapAt(G.momStalk, G.momH + .6)) { G.momWait = 0; G.momTo = want; G.momHop = .3; }
   } else { G.momWait = 0; if (G.momH <= 0) G.momStalk = G.momTo = want; }
   const my = G.momH < 0 ? sy(0) - 26 * U : sy(G.momH) + 4 * U;
   G.momVis = my < H - 40 * U && my > 70 * U;
