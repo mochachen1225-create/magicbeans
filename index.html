@@ -406,7 +406,7 @@ function paintGround(w, h) {
   card(() => { ctx.beginPath(); ctx.moveTo(-10, gy + h * .2 + 4); for (let x = -10; x <= w + 10; x += 6) ctx.lineTo(x, gy + Math.sin(x * .045) * 4 + (x % 12 ? 0 : 1.5)); ctx.lineTo(w + 10, gy + h * .2 + 4); ctx.closePath(); }, PAT.felt, '#2c6428', 6);
   corrug(0, gy + h * .2 - 2, w, 7 * U);
   for (let i = 0; i < 16; i++) { const x = (i * 97 % 100) / 100 * w, y = gy + 14 + ((i * 53) % 100) / 100 * h * .14; circ(x, y, 3.2 * U, ['#f0c443', '#d64f45', '#f7f1e3'][i % 3]); circ(x, y, 1.2 * U, '#7a4a20', false); }
-  tornPaper(w * .4, gy - 12 * U, 46 * U, 20 * U); tornPaper(w * .66, gy - 10 * U, 40 * U, 18 * U, '#e9dcc0');
+  tornPaper(w * .36, gy - 12 * U, 46 * U, 20 * U);
   pin(w * .52, gy + h * .1, '#3b9c97');
   // 傑克家（紙箱屋）
   const u = U, hx = w * .03, hw = w * .32, wh = 76 * u, dx = w * .19;
@@ -433,9 +433,31 @@ function paintGround(w, h) {
   label(hx + hw * .78, gy - wh * .35, 34 * u, 15 * u, '#d64f45', '易碎', '#fff', -.06);
   stamp(hx + hw * .5, gy - wh * .74, 10 * u, 'BEANS');
   tape(hx + 4 * u, gy - wh + 8 * u, 28 * u, 9 * u, -.7, '#f0c443', 'stripes');
-  // 冰棒棍圍欄
-  for (let x = w * .86; x < w + 10; x += 15 * U) card(() => { rrPath(x, gy - 26 * U, 9 * U, 28 * U, 4 * U); }, '#ecd3a4', '#b39060', 2);
-  card(() => { rrPath(w * .85, gy - 18 * U, w * .16, 6 * U, 3 * U); }, '#e2c38e', '#a8844f', 2);
+  // 空空的牛棚：乾草、空水桶、打開的柵門（牛牛被換成豆子了）
+  const px0 = w * .76;
+  card(() => { ctx.beginPath(); ctx.moveTo(w * .78, gy + 2); ctx.quadraticCurveTo(w * .79, gy - 52 * U, w * .835, gy - 46 * U); ctx.quadraticCurveTo(w * .88, gy - 54 * U, w * .9, gy + 2); ctx.closePath(); }, PAT.yellow, '#b8862a', 2);
+  sh(false); ctx.strokeStyle = 'rgba(140,95,20,.5)'; ctx.lineWidth = 1.2 * U;
+  for (let i = 0; i < 7; i++) { const x = w * (.79 + i * .015); ctx.beginPath(); ctx.moveTo(x, gy - 2 * U); ctx.lineTo(x + 3 * U, gy - 34 * U - (i % 3) * 5 * U); ctx.stroke(); }
+  for (let x = px0; x < w + 10; x += 15 * U) card(() => { rrPath(x, gy - 30 * U, 9 * U, 32 * U, 4 * U); }, '#ecd3a4', '#b39060', 2);
+  card(() => { rrPath(px0 - 2 * U, gy - 24 * U, w - px0 + 12, 6 * U, 3 * U); }, '#e2c38e', '#a8844f', 2);
+  card(() => { rrPath(px0 - 2 * U, gy - 12 * U, w - px0 + 12, 6 * U, 3 * U); }, '#e2c38e', '#a8844f', 2);
+  sh(false); ctx.strokeStyle = '#4c6f7c'; ctx.lineWidth = 1.5 * U; ctx.beginPath(); ctx.arc(w * .915 + 11 * U, gy - 34 * U, 9 * U, Math.PI, 0); ctx.stroke();
+  card(() => { ctx.beginPath(); ctx.moveTo(w * .915, gy - 34 * U); ctx.lineTo(w * .915 + 22 * U, gy - 34 * U); ctx.lineTo(w * .915 + 18 * U, gy - 14 * U); ctx.lineTo(w * .915 + 4 * U, gy - 14 * U); ctx.closePath(); }, '#7fa9b8', '#4c6f7c', 2);
+  ell(w * .915 + 11 * U, gy - 34 * U, 11 * U, 3 * U, '#3e5a64', 0, false);
+  // 打開的柵門（斜斜地往外開）
+  for (const t of [0, .5, 1]) limb(px0 - 30 * U * t, gy - 26 * U + 6 * U * t, px0 - 30 * U * t, gy - 2 * U + 6 * U * t, '#ecd3a4', 6 * U);
+  limb(px0, gy - 21 * U, px0 - 30 * U, gy - 15 * U, '#e2c38e', 5 * U); limb(px0, gy - 8 * U, px0 - 30 * U, gy - 2 * U, '#e2c38e', 5 * U);
+  // 「牛牛的家」牌子
+  const sx = w * .87, sgy = gy - 62 * U;
+  limb(sx, gy + 2, sx, sgy, '#d9b98a', 5 * U);
+  ctx.save(); ctx.translate(sx, sgy - 4 * U); ctx.rotate(-.05);
+  card(() => rrPath(-40 * U, -18 * U, 80 * U, 34 * U, 4 * U), PAT.kraftL, '#8a6436', 3);
+  ctx.font = `900 ${14 * U}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#3d2b1f'; ctx.fillText('牛牛的家', 8 * U, 0);
+  circ(-28 * U, -1 * U, 9 * U, '#fbf7ee'); circ(-31 * U, -4 * U, 3.5 * U, '#3d2b1f', false); circ(-24 * U, 3 * U, 2.5 * U, '#3d2b1f', false);
+  ell(-28 * U, 4 * U, 5 * U, 3 * U, '#f4a6a0', 0, false); circ(-30 * U, 4 * U, .9 * U, '#7a3a30', false); circ(-26 * U, 4 * U, .9 * U, '#7a3a30', false);
+  ell(-36 * U, -7 * U, 3 * U, 1.6 * U, '#fbf7ee', -.5, false); ell(-20 * U, -7 * U, 3 * U, 1.6 * U, '#fbf7ee', .5, false);
+  ctx.restore();
+  tape(sx + 30 * U, sgy - 20 * U, 26 * U, 9 * U, .5, '#d64f45', 'stripes');
 }
 function paintCastle(w, h) {
   const tube = (x, tw, top) => {
@@ -621,9 +643,9 @@ let G = null;
 let firstEver = LS.get('jack_played', '0') !== '1';
 const ptr = { down: false, id: -1, x: 0, y: 0, ox: 0, oy: 0, lx: 0, ly: 0 };
 const MOM_LINES = ['傑克！給我下來！', '我們家的牛呢！', '豆子能吃嗎？！', '晚餐不用吃了！', '你給我站住！',
-  '一頭牛換五顆豆子？！', '那頭牛叫小花欸！', '爬那麼高不怕摔喔！', '功課寫完了沒？！', '明天開始換你當牛！',
+  '一頭牛換五顆豆子？！', '那頭牛叫牛牛欸！', '爬那麼高不怕摔喔！', '功課寫完了沒？！', '明天開始換你當牛！',
   '我數到三！一、二……', '回家罰你洗一個月的碗！', '魔豆是能繳房租嗎？！', '鄰居都在看了啦！', '我要跟你阿嬤告狀！',
-  '外套都沒穿會著涼！', '你給我說清楚！', '早知道生一顆豆子就好！', '小花在哭你知道嗎！', '掃把已經熱身好了！'];
+  '外套都沒穿會著涼！', '你給我說清楚！', '早知道生一顆豆子就好！', '牛牛的家都空了啦！', '掃把已經熱身好了！'];
 const QUOTES = {
   mom: ['傑克！我們家的牛呢！', '今天晚餐沒你的份。', '拿牛換豆子？你給我下來！', '掃把比魔豆還快喔。'],
   bird: ['豆子上的蟲是鳥的，你不是。', '啾！你的頭髮看起來很像鳥窩。', '小鳥也是要吃早餐的。', '被啄一下，手就鬆了……'],
@@ -1182,14 +1204,14 @@ function drawMomInWorld() {
 function drawJackInWorld() {
   const gy = sy(0) - 28 * U;
   if (['title', 'plant', 'sow', 'grow'].includes(scene)) {
-    drawJack(W * .8, gy, 1.1, 'stand');
-    if (scene === 'sow') { const u = clamp(sceneT / .45, 0, 1); circ(lerp(W * .8 - 20 * U, W / 2, u), lerp(gy, sy(0) - 4 * U, u) - Math.sin(u * Math.PI) * 60 * U, 5 * U, '#7a4a8a'); }
+    drawJack(W * .64, gy, 1.1, 'stand');
+    if (scene === 'sow') { const u = clamp(sceneT / .45, 0, 1); circ(lerp(W * .64 - 20 * U, W / 2, u), lerp(gy, sy(0) - 4 * U, u) - Math.sin(u * Math.PI) * 60 * U, 5 * U, '#7a4a8a'); }
     return;
   }
   if (scene === 'mom') {
     const u = clamp((sceneT - (G.quick ? .3 : .6)) / .4, 0, 1);
-    if (u <= 0) { drawJack(W * .8, gy, 1.1, 'stand'); return; }
-    const x = lerp(W * .8, stalkX(1, 1.5), u), y = lerp(gy, sy(1.5), u) - Math.sin(u * Math.PI) * 40 * U;
+    if (u <= 0) { drawJack(W * .64, gy, 1.1, 'stand'); return; }
+    const x = lerp(W * .64, stalkX(1, 1.5), u), y = lerp(gy, sy(1.5), u) - Math.sin(u * Math.PI) * 40 * U;
     drawJack(x, y, 1.1, u < 1 ? 'stand' : 'climb', 0, 0);
     return;
   }
