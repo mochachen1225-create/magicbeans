@@ -101,8 +101,7 @@ h2{margin:0 0 6px;font-size:26px;color:var(--ink)}
     <div class="best" id="tBest"></div>
     <button class="btn green" id="bStart">開始</button>
     <button class="btn ghost" id="bGame2">分享遊戲給朋友</button>
-    <button class="linkbtn" id="bVoice">🔊 試聽配音</button>
-    <div class="ver">版本 1.4・日文配音</div>
+    <div class="ver">版本 1.5</div>
   </div></div>
 
   <div class="panel" id="pFail"><div class="card">
@@ -173,29 +172,7 @@ let AC = null, muted = LS.get('jack_mute', '0') === '1', noiseBuf = null;
 function audio() {
   if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; } }
   if (AC && AC.state === 'suspended') AC.resume();
-  if (!voiceUnlocked) { voiceUnlocked = true; say(' ', { volume: 0 }); }
   return AC;
-}
-// ---------- 配音（手機內建語音朗讀） ----------
-const TTS = 'speechSynthesis' in window;
-let VOICE = null, voiceUnlocked = false;
-function pickVoice() {
-  try { const vs = speechSynthesis.getVoices(); VOICE = vs.find(v => /^ja/i.test(v.lang)) || null; } catch (e) {}
-}
-if (TTS) { pickVoice(); try { speechSynthesis.onvoiceschanged = pickVoice; } catch (e) {} }
-// 配音用日文：畫面維持中文，聲音念對應的日文台詞
-const JA = {"傑克！給我下來！": "ジャック！降りてきなさい！", "我們家的牛呢！": "うちの牛はどこよ！", "豆子能吃嗎？！": "豆なんか食べられるの！？", "晚餐不用吃了！": "晩ごはん抜きよ！", "你給我站住！": "待ちなさい！", "一頭牛換五顆豆子？！": "牛一頭と豆五つ！？", "那頭牛叫牛牛欸！": "あの子はニウニウなのよ！", "爬那麼高不怕摔喔！": "そんな高い所、落ちるわよ！", "功課寫完了沒？！": "宿題は終わったの！？", "明天開始換你當牛！": "明日からあんたが牛よ！", "我數到三！一、二……": "三つ数えるわよ！いち、に…", "回家罰你洗一個月的碗！": "一ヶ月、皿洗いの刑よ！", "魔豆是能繳房租嗎？！": "豆で家賃が払えるの！？", "鄰居都在看了啦！": "ご近所さんが見てるわよ！", "我要跟你阿嬤告狀！": "おばあちゃんに言いつけるわよ！", "外套都沒穿會著涼！": "上着も着ないで、風邪ひくわよ！", "你給我說清楚！": "ちゃんと説明しなさい！", "早知道生一顆豆子就好！": "豆を産んだ方がマシだったわ！", "牛牛的家都空了啦！": "ニウニウの小屋が空っぽよ！", "掃把已經熱身好了！": "ほうきの準備はできてるわよ！", "傑克！我們家的牛呢！": "ジャック！うちの牛はどこ！", "今天晚餐沒你的份。": "今日の晩ごはんは抜きね。", "拿牛換豆子？你給我下來！": "牛と豆を交換！？降りてきなさい！", "掃把比魔豆還快喔。": "ほうきは豆の木より速いのよ。", "豆子上的蟲是鳥的，你不是。": "豆の虫は鳥のもの。君は違う。", "啾！你的頭髮看起來很像鳥窩。": "チュン！君の髪、鳥の巣みたい。", "小鳥也是要吃早餐的。": "小鳥だって朝ごはんが必要なの。", "被啄一下，手就鬆了……": "つつかれて、手が離れちゃった…", "抓緊一點啊！": "しっかりつかまって！", "傑克乘著風，飛去隔壁村了。": "ジャックは風に乗って、隣の村まで飛んでいった。", "今天風很大，傑克很輕。": "今日は風が強い。ジャックは軽い。", "風說：叫你不要亂動。": "動くなって言ったでしょ、と風が言った。", "嘿嘿嘿，我聞到人類的味道！": "ふっふっふ、人間のにおいがするぞ！", "木頭人不能動，你動了。": "だるまさんは動いちゃダメ。動いたな。", "巨人今天的點心有著落了。": "今日のおやつが決まったぞ。", "費、菲、佛、凡！抓到你了！": "フィー・ファイ・フォー・ファム！捕まえたぞ！", "巫婆：借過借過～掃把沒有煞車！": "どいてどいて〜、ほうきにブレーキはないの！", "你被當成灰塵掃掉了。": "ほこりと一緒に掃かれちゃった。", "巫婆說：下次記得靠右爬。": "次は右側を登りなさい、と魔女が言った。", "飛天掃把交通事故，傑克負全責。": "ほうきの交通事故。ジャックの過失100パーセント。", "嗯？": "ん？", "拿到金蛋了！耶！": "やったー！金の卵、ゲット！"};
-const JA_CHANT = 'だるまさんが、ころんだ！';
-const VO = { mom: { pitch: 1.6, rate: 1.3 }, giant: { pitch: .1, rate: .85 }, chant: { pitch: .1, rate: 1.4 }, jack: { pitch: 1.4, rate: 1.15 }, story: { pitch: 1, rate: 1.05 } };
-function say(text, o = {}, interrupt = true) {
-  if (!TTS || (muted && o.volume !== 0)) return;
-  try {
-    if (!interrupt && (speechSynthesis.speaking || speechSynthesis.pending)) return;
-    if (interrupt) speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(o.volume === 0 ? text : (JA[text] || text)); u.lang = 'ja-JP'; if (VOICE) u.voice = VOICE;
-    u.pitch = o.pitch ?? 1; u.rate = o.rate ?? 1; u.volume = o.volume ?? 1;
-    speechSynthesis.speak(u);
-  } catch (e) {}
 }
 function tone(f, d, type = 'sine', v = .2, f2 = null, delay = 0) {
   if (!AC || muted) return;
@@ -893,7 +870,7 @@ function startRun(quick) {
   G = newRun(); G.quick = quick;
   panel(null); chant(''); clearHint(); fadeA = 0;
   camH = 4; sceneT = 0;
-  if (quick) { grown = TOP + 3; scene = 'mom'; G.bubble = pick(MOM_LINES); SFX.door(); say(G.bubble, VO.mom); }
+  if (quick) { grown = TOP + 3; scene = 'mom'; G.bubble = pick(MOM_LINES); SFX.door(); }
   else { grown = 0; scene = 'plant'; hint('點一下土地，種下魔豆', 30); }
 }
 function plant() { scene = 'sow'; sceneT = 0; clearHint(); }
@@ -909,9 +886,7 @@ function fail(reason) {
   SFX.fail(); buzz([90, 50, 160]); shakeT = .45; chant(''); clearHint();
   setTimeout(() => {
     $('fReason').textContent = REASON[reason];
-    const q = pick(QUOTES[reason]);
-    $('fQuote').textContent = '「' + q + '」';
-    say(q, reason === 'mom' ? VO.mom : reason === 'giant' ? VO.giant : VO.story);
+    $('fQuote').textContent = '「' + pick(QUOTES[reason]) + '」';
     $('fDetail').textContent = G.inGiant ? `就差一點點！（進度 ${Math.round(G.gi.p * 100)}%）` : `爬到 ${Math.round(clamp(G.h, 0, TOP))} / ${TOP} 公尺`;
     panel('pFail');
   }, 800);
@@ -923,7 +898,6 @@ function win() {
   if (G.newBest) LS.set('jack_best', G.final.toFixed(1));
   LS.set('jack_played', '1'); firstEver = false; G.title = jackTitle();
   SFX.win(); buzz([40, 40, 40, 40, 120]);
-  setTimeout(() => say('拿到金蛋了！耶！', VO.jack), 500);
   setTimeout(() => {
     $('wTime').innerHTML = `${fmt(G.final)}<small> 秒</small>`;
     $('wDetail').textContent = G.bonus ? `實際 ${fmt(G.time)} 秒，金幣 ${G.bonus} 枚扣 ${G.bonus} 秒` : '這次沒撿到金幣，撿金幣可以扣秒數喔';
@@ -1017,7 +991,7 @@ function swipeSide(to) {
 function onDown(x) {
   if (scene === 'climb') { const side = x < W / 3 ? 0 : x < W * 2 / 3 ? 1 : 2; if (side === G.stalk || G.windBlow) stroke(); else swipeSide(side); }
   else if (scene === 'plant') plant();
-  else if (scene === 'grow' && sceneT > 1) { scene = 'mom'; sceneT = 0; camH = 4; grown = TOP + 3; G.bubble = '傑克！我們家的牛呢！'; SFX.door(); say(G.bubble, VO.mom); }
+  else if (scene === 'grow' && sceneT > 1) { scene = 'mom'; sceneT = 0; camH = 4; grown = TOP + 3; G.bubble = '傑克！我們家的牛呢！'; SFX.door(); }
 }
 function onMove(d) {
   if (scene !== 'climb') return;
@@ -1167,7 +1141,7 @@ function update(dt) {
       else if (t < 2.4) { if (!G.whoosh) { G.whoosh = 1; SFX.whoosh(); hint('咻——！', 1.2); } const u = (t - .8) / 1.6; grown = 3 + TOP * easeOut(u); camH = 4 + (TOP - 7) * ease(u); }
       else if (t < 3.2) { grown = TOP + 3; camH = TOP - 3; }
       else if (t < 4.2) camH = lerp(TOP - 3, 4, ease((t - 3.2) / 1));
-      else { camH = 4; scene = 'mom'; sceneT = 0; G.bubble = '傑克！我們家的牛呢！'; SFX.door(); say(G.bubble, VO.mom); }
+      else { camH = 4; scene = 'mom'; sceneT = 0; G.bubble = '傑克！我們家的牛呢！'; SFX.door(); }
       break;
     }
     case 'mom': if (sceneT >= (G.quick ? 1.3 : 1.9)) startClimb(); break;
@@ -1224,7 +1198,7 @@ function updClimb(dt) {
   } else { G.momWait = 0; if (G.momH <= 0) G.momStalk = G.momTo = want; }
   const my = G.momH < 0 ? sy(0) - 26 * U : sy(G.momH) + 4 * U;
   G.momVis = my < H - 40 * U && my > 70 * U;
-  if (G.momVis) { if ((G.momTalk -= dt) <= 0) { G.momTalk = rnd(2.2, 3.4); G.momLine = momSay(); G.momLineT = 1.7; say(G.momLine, VO.mom, false); } }
+  if (G.momVis) { if ((G.momTalk -= dt) <= 0) { G.momTalk = rnd(2.2, 3.4); G.momLine = momSay(); G.momLineT = 1.7; } }
   else { G.momLineT = 0; G.momTalk = Math.min(G.momTalk, .6); }
   if (G.momLineT > 0) G.momLineT -= dt;
   if (G.momH > 0) G.minGap = Math.min(G.minGap, G.h - G.momH);
@@ -1247,8 +1221,8 @@ function updGiant(dt) {
     case 'back': {
       const n = Math.min(6, Math.max(1, Math.ceil(6 * g.t / g.dur)));
       chant(CH.slice(0, n).join('、'));
-      if (n > (g.sung || 0)) { g.sung = n; SFX.chant(n - 1); if (n === 1) say(JA_CHANT, { pitch: VO.chant.pitch, rate: clamp(1.7 / g.dur, .7, 1.8) }); }
-      if (g.t >= g.dur) { g.state = 'turning'; g.t = 0; SFX.turn(); buzz(40); setTimeout(() => { if (G.gi && G.gi.state !== 'back') say('嗯？', VO.giant); }, 250); }
+      if (n > (g.sung || 0)) { g.sung = n; SFX.chant(n - 1); }
+      if (g.t >= g.dur) { g.state = 'turning'; g.t = 0; SFX.turn(); buzz(40); }
       break;
     }
     case 'turning':
@@ -1752,7 +1726,7 @@ function frame(now) {
 $('bStart').onclick = () => { audio(); startRun(false); };
 $('bRetry').onclick = () => { audio(); startRun(true); };
 $('bAgain').onclick = () => { audio(); startRun(true); };
-$('mute').onclick = () => { muted = !muted; LS.set('jack_mute', muted ? '1' : '0'); setMute(); audio(); if (muted && TTS) try { speechSynthesis.cancel(); } catch (e) {} };
+$('mute').onclick = () => { muted = !muted; LS.set('jack_mute', muted ? '1' : '0'); setMute(); audio(); };
 const GAME_URL = () => location.href.split('#')[0].split('?')[0];
 function copyText(all) {
   const ok = () => toast('已複製！貼到 LINE 給朋友吧');
@@ -1839,7 +1813,6 @@ const shareGame = async () => {
   copyText(msg + ' ' + url);
 };
 $('bGame').onclick = shareGame; $('bGame2').onclick = shareGame;
-$('bVoice').onclick = () => { audio(); if (muted) { toast('先點右上角喇叭打開聲音'); return; } if (!TTS) { toast('這個瀏覽器不支援配音'); return; } say('傑克！我們家的牛呢！', VO.mom); setTimeout(() => say(JA_CHANT, VO.giant, false), 2200); };
 
 window.addEventListener('resize', resize);
 initPats(); initStatic(); resize();
